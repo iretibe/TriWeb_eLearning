@@ -1,0 +1,65 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36127.28
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eLearning.Domain", "src\eLearning.Domain\eLearning.Domain.csproj", "{5CA00E93-7EA0-4FD3-8F45-4BD1B4750A47}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eLearning.Application", "src\eLearning.Application\eLearning.Application.csproj", "{F5B961D9-2A87-4C85-B1E6-0E011C453FC0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eLearning.Infrastructure", "src\eLearning.Infrastructure\eLearning.Infrastructure.csproj", "{11E9F34D-E7BA-40D9-B540-70A99C479C63}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eLearning.Api", "src\eLearning.Api\eLearning.Api.csproj", "{48451F0B-B219-42AC-B34A-27CCA54E075D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eLearning.WebApp", "src\eLearning.WebApp\eLearning.WebApp\eLearning.WebApp.csproj", "{20394F61-6FEF-475D-87A8-17FBEF4E4AF6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "eLearning.WebApp.Client", "src\eLearning.WebApp\eLearning.WebApp.Client\eLearning.WebApp.Client.csproj", "{47EB4CA7-C6E3-4B9D-94BE-F89DC69A40D6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5CA00E93-7EA0-4FD3-8F45-4BD1B4750A47}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5CA00E93-7EA0-4FD3-8F45-4BD1B4750A47}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5CA00E93-7EA0-4FD3-8F45-4BD1B4750A47}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5CA00E93-7EA0-4FD3-8F45-4BD1B4750A47}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F5B961D9-2A87-4C85-B1E6-0E011C453FC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5B961D9-2A87-4C85-B1E6-0E011C453FC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F5B961D9-2A87-4C85-B1E6-0E011C453FC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F5B961D9-2A87-4C85-B1E6-0E011C453FC0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11E9F34D-E7BA-40D9-B540-70A99C479C63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11E9F34D-E7BA-40D9-B540-70A99C479C63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11E9F34D-E7BA-40D9-B540-70A99C479C63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11E9F34D-E7BA-40D9-B540-70A99C479C63}.Release|Any CPU.Build.0 = Release|Any CPU
+		{48451F0B-B219-42AC-B34A-27CCA54E075D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{48451F0B-B219-42AC-B34A-27CCA54E075D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{48451F0B-B219-42AC-B34A-27CCA54E075D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{48451F0B-B219-42AC-B34A-27CCA54E075D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20394F61-6FEF-475D-87A8-17FBEF4E4AF6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20394F61-6FEF-475D-87A8-17FBEF4E4AF6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20394F61-6FEF-475D-87A8-17FBEF4E4AF6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20394F61-6FEF-475D-87A8-17FBEF4E4AF6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{47EB4CA7-C6E3-4B9D-94BE-F89DC69A40D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47EB4CA7-C6E3-4B9D-94BE-F89DC69A40D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47EB4CA7-C6E3-4B9D-94BE-F89DC69A40D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{47EB4CA7-C6E3-4B9D-94BE-F89DC69A40D6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5CA00E93-7EA0-4FD3-8F45-4BD1B4750A47} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{F5B961D9-2A87-4C85-B1E6-0E011C453FC0} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{11E9F34D-E7BA-40D9-B540-70A99C479C63} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{48451F0B-B219-42AC-B34A-27CCA54E075D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{20394F61-6FEF-475D-87A8-17FBEF4E4AF6} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{47EB4CA7-C6E3-4B9D-94BE-F89DC69A40D6} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E54FFE95-BA53-4454-BA05-4CA10AE20752}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,285 @@
+﻿@page "/cart"
+@using Blazored.SessionStorage
+@using eLearning.WebApp.Client.Models
+@using eLearning.WebApp.Client.Services
+@inject CartService _cartService
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthProvider
+@inject ISessionStorageService _sessionStorage
+@inject IOrderService _orderService
+@inject IUserService _userService
+@inject IPaymentService _paymentService
+@inject IJSRuntime JS
+
+<!-- Promo Section Start -->
+<section class="promo-sec" style="background: url('images/promo-bg.jpg')no-repeat center center / cover;">
+    <img src="images/promo-left.png" alt="" class="anim-img">
+    <img src="images/promo-right.png" alt="" class="anim-img anim-right">
+    <div class="container">
+        <div class="row">
+        <div class="col-lg-12 text-center">
+            <h1 class="display-2 text-white">Cart</h1>
+            <nav aria-label="breadcrumb mt-0">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Home</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Cart</li>
+                </ol>
+            </nav>
+        </div>
+        </div>
+    </div>
+</section>
+<!-- Promo Section End -->
+
+@if (CartItems.Count == 0)
+{
+    <p>Your cart is empty.</p>
+}
+else
+{
+    <!-- Cart Section Start -->
+    <div class="cart-section sec-padding">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 wow fadeInLeft">
+                    <div class="entry-content">
+                        <div class="woocommerce rounded bg-shade border">
+                            <div class="woocommerce-notices-wrapper"></div>
+                            <form class="woocommerce-cart-form" action="#" method="post">
+                                <table class="table shop_table shop_table_responsive cart woocommerce-cart-form__contents">
+                                    <thead class="shadow-sm">
+                                        <tr>
+                                            <th class="product-name">Course</th>
+                                            <th class="product-price">Price</th>
+                                            <th class="product-thumbnail">&nbsp;</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in CartItems)
+                                        {
+                                            <tr class="woocommerce-cart-form__cart-item cart_item">
+                                                <td class="product-name" data-title="Product">
+                                                    <a href="#">@item.Title</a>
+                                                </td>
+                                                <td class="product-price" data-title="Price">
+                                                    <span class="woocommerce-Price-amount amount">
+                                                        GHS @(item.Price.ToString("N2"))
+                                                    </span>
+                                                </td>
+                                                <td class="product-remove text-end">
+                                                    <button type="button" class="btn btn-sm btn-danger" @onclick="() => RemoveFromCart(item.Id)">
+                                                        <i class="feather-icon icon-trash"></i> Remove
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+
+                                        <tr>
+                                            <td colspan="3" class="actions cart-form-footer mt-3 p-3">
+                                                <div class="bottom-cart d-flex justify-content-between align-items-center flex-wrap">
+                                                    <a href="/courses" class="btn btn-primary">Continue Shopping</a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <!-- Cart Total Start -->
+                    <aside class="cart-totals ms-lg-4 rounded bg-shade border p-4">
+                        <h3 class="sub-title">Summary</h3>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Course</th>
+                                    <th>Price (GHS)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in CartItems)
+                                {
+                                    <tr class="product-list">
+                                        <td>@item.Title</td>
+                                        <td>GHS @(item.Price.ToString("N2"))</td>
+                                    </tr>
+                                }
+                                <tr class="subtotal border-top">
+                                    <th>Total</th>
+                                    <td><strong>GHS @(CartItems.Sum(c => c.Price).ToString("N2"))</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="text-center mt-4">
+                            <button class="btn btn-primary w-100" @onclick="ProceedToCheckout">Proceed to Checkout</button>
+                        </div>
+                    </aside>
+                    <!-- Cart Total End -->
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Cart Section End -->
+}
+
+@if (isProcessing)
+{
+    <div class="overlay">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Processing...</span>
+        </div>
+    </div>
+
+    <style>
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1050;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+}
+
+@code {
+    private List<CourseModel> CartItems = new();
+    private bool _hasCheckedStorage = false;
+    private bool isProcessing = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_hasCheckedStorage)
+        {
+            _hasCheckedStorage = true;
+
+            try
+            {
+                var cart = await _sessionStorage.GetItemAsync<List<CourseModel>>("cart") ?? new();
+                CartItems = cart;
+                _cartService.SetCart(CartItems);
+
+                var authState = await AuthProvider.GetAuthenticationStateAsync();
+                var user = authState.User;
+
+                if (user.Identity?.IsAuthenticated == true)
+                {
+                    if (await _sessionStorage.ContainKeyAsync("pendingCart"))
+                    {
+                        var pendingCart = await _sessionStorage.GetItemAsync<List<CourseModel>>("pendingCart");
+                        await _sessionStorage.RemoveItemAsync("pendingCart");
+
+                        CartItems = pendingCart ?? new();
+                        _cartService.SetCart(CartItems);
+
+                        await TriggerCartPaystackAsync();
+                    }
+                }
+
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Error loading cart: " + ex.Message);
+            }
+        }
+    }
+
+    private async Task RemoveFromCart(Guid courseId)
+    {
+        CartItems.RemoveAll(c => c.Id == courseId);
+        await _sessionStorage.SetItemAsync("cart", CartItems);
+        _cartService.SetCart(CartItems);
+    }
+
+    private async Task ProceedToCheckout()
+    {
+        if (!CartItems.Any()) return;
+
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated != true)
+        {
+            await _sessionStorage.SetItemAsync("pendingCart", CartItems);
+            Nav.NavigateTo($"/account/login?returnUrl=/cart", forceLoad: true);
+            return;
+        }
+
+        await TriggerCartPaystackAsync();
+    }
+
+    private async Task TriggerCartPaystackAsync()
+    {
+        try
+        {
+            isProcessing = true;
+            StateHasChanged(); // Update UI to show overlay
+
+            var authState = await AuthProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            var email = user.Identity?.Name ?? "";
+            var userId = await _userService.GetUserIdByEmailAsync(email);
+
+            if (!CartItems.Any())
+            {
+                isProcessing = false;
+                return;
+            }
+
+            var reference = GenerateReference();
+            var totalAmount = Convert.ToInt32(CartItems.Sum(c => c.Price));
+
+            // Step 1: Save order & items
+            await _orderService.CreateOneTimePurchaseOrderAsync(userId, CartItems, reference);
+
+            // Step 2: Initialize Paystack
+            var payUrl = await _paymentService.InitializePaystackAsync(email, totalAmount, reference);
+
+            // Step 3: Redirect to Paystack
+            await JS.InvokeVoidAsync("redirectToPaystack", payUrl);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Paystack Trigger Failed: " + ex.Message);
+            // Optional: show an error message on the UI
+        }
+        finally
+        {
+            isProcessing = false;
+            StateHasChanged(); // Ensure UI overlay hides if there's an error
+        }
+    }
+
+    // private async Task TriggerCartPaystackAsync()
+    // {
+    //     var authState = await AuthProvider.GetAuthenticationStateAsync();
+    //     var user = authState.User;
+    //     var email = user.Identity?.Name ?? "";
+    //     var userId = await _userService.GetUserIdByEmailAsync(email);
+
+    //     if (!CartItems.Any())
+    //         return;
+
+    //     var reference = GenerateReference();
+    //     var totalAmount = Convert.ToInt32(CartItems.Sum(c => c.Price));
+
+    //     // Save order & order items using CartItems
+    //     await _orderService.CreateOneTimePurchaseOrderAsync(userId, CartItems, reference);
+
+    //     // Initialize Paystack payment
+    //     var payUrl = await _paymentService.InitializePaystackAsync(email, totalAmount, reference);
+
+    //     // Redirect to Paystack payment page
+    //     await JS.InvokeVoidAsync("redirectToPaystack", payUrl);
+    // }
+
+    private string GenerateReference() =>
+        $"ELRN-{Guid.NewGuid().ToString("N").Substring(0, 12).ToUpper()}";
+}

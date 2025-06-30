@@ -1,0 +1,134 @@
+﻿@page "/my-courses"
+@using eLearning.WebApp.Client.Models
+@using eLearning.WebApp.Client.Services
+@inject IUserService _userService
+@inject ICourseService _courseService
+@inject AuthenticationStateProvider _authProvider
+
+<section class="promo-sec" style="background: url('images/promo-bg.jpg') no-repeat center center / cover;">
+    <img src="images/promo-left.png" alt="" class="anim-img">
+    <img src="images/promo-right.png" alt="" class="anim-img anim-right">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <h1 class="display-2 text-white">My Courses</h1>
+                <nav aria-label="breadcrumb mt-0">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="/">Home</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">My Courses</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</section>
+
+@if (!isLoaded)
+{
+    <p>Loading your courses...</p>
+}
+else if (userCourses.Count == 0)
+{
+    <p>You haven't enrolled in any course yet.</p>
+}
+else
+{
+    <div class="container mt-5">
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+            @foreach (var course in userCourses)
+            {
+                @if (course.VideoUrls != null && course.VideoUrls.Any())
+                {
+                    foreach (var url in course.VideoUrls)
+                    {
+                        <div class="col">
+                            <div class="card h-100 shadow-sm border-0" @onclick="() => OpenVideo(url)">
+                                <video class="card-img-top" muted playsinline>
+                                    <source src="https://localhost:7012@url" type="video/mp4" />
+                                    Your browser does not support HTML5 video.
+                                </video>
+                                <div class="card-body">
+                                    <p class="card-text">@course.Title</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            }
+        </div>
+    </div>
+
+    @if (SelectedVideoUrl != null)
+    {
+        <div class="video-overlay" @onclick="CloseVideo">
+            <div class="video-popup" @onclick:stopPropagation>
+                <video controls autoplay style="width: 100%; height: auto;">
+                    <source src="@SelectedVideoUrl" type="video/mp4" />
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+        </div>
+    }
+
+    <style>
+        .video-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .video-popup {
+            width: 90%;
+            max-width: 960px;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        video {
+            cursor: pointer;
+        }
+    </style>
+}
+
+@code {
+    private List<CourseModel> userCourses = new();
+    private bool isLoaded = false;
+    private string? SelectedVideoUrl;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await _authProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            var email = user.Identity?.Name;
+            var userId = await _userService.GetUserIdByEmailAsync(email!);
+
+            userCourses = await _courseService.GetUserCoursesAsync(userId!);
+
+            // Prepend the API base URL for video previews
+            foreach (var course in userCourses)
+            {
+                course.VideoUrls = course.VideoUrls
+                    .Where(v => !string.IsNullOrWhiteSpace(v))
+                    .Select(v => v.StartsWith("http") ? v : $"https://localhost:7012{v}")
+                    .ToList();
+            }
+        }
+
+        isLoaded = true;
+    }
+
+    private void OpenVideo(string url) => SelectedVideoUrl = url;
+
+    private void CloseVideo() => SelectedVideoUrl = null;
+}

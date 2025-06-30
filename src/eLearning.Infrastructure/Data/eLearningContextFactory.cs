@@ -1,0 +1,16 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Design;
+
+namespace eLearning.Infrastructure.Data
+{
+    internal class eLearningContextFactory : IDesignTimeDbContextFactory<eLearningContext>
+    {
+        public eLearningContext CreateDbContext(string[] args)
+        {
+            var optionsBuilder = new DbContextOptionsBuilder<eLearningContext>();
+            optionsBuilder.UseSqlServer("Server=xxx;Database=xxx;User ID=sa;Password=xxx@2023;Trusted_Connection=False;MultipleActiveResultSets=True;TrustServerCertificate=True");
+
+            return new eLearningContext(optionsBuilder.Options);
+        }
+    }
+}

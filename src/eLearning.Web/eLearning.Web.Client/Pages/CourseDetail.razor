@@ -1,0 +1,183 @@
+﻿@page "/courseDetail/{Id:guid}"
+@using eLearning.Web.Client.Models
+@using eLearning.Web.Client.Services
+
+@inject ICourseService _service
+
+<!-- Promo Section Start -->
+	<section class="promo-sec" style="background: url('images/promo-bg.jpg')no-repeat center center / cover;">
+		<img src="images/promo-left.png" alt="" class="anim-img">
+		<img src="images/promo-right.png" alt="" class="anim-img anim-right">
+		<div class="container">
+			<div class="row">
+				<div class="col-lg-12 text-center">
+					<h1 class="display-2 text-white">@course?.Title</h1>
+					<nav aria-label="breadcrumb mt-0">
+						<ol class="breadcrumb">
+							<li class="breadcrumb-item"><a href="/">Home</a></li>
+							<li class="breadcrumb-item active" aria-current="page">Course detail</li>
+						</ol>
+					</nav>
+				</div>
+			</div>
+		</div>
+	</section>
+	<!-- Promo Section End -->
+
+	<!-- Course Details Start -->
+	<section class="course-details-sec sec-padding">
+		<div class="container">
+			<div class="row">
+				<div class="col-lg-8">
+					<article class="course-details">
+						@* <img class="rounded-3 img-fluid" src="images/course-details.jpg" alt="Course"> *@
+						<img class="rounded-3 img-fluid" src="@($"https://localhost:7012{course?.ImageUrl ?? "/images/default-course.jpg"}")" alt="Course" />
+						<div class="course-details-meta d-lg-flex align-items-center justify-content-between">
+							<div class="d-flex">
+								@* <div class="avatar">
+									<img width="56" class="rounded-circle" src="images/avatar2.png" alt="avatar">
+								</div> *@
+								<div class="avatar-info ms-3">
+									<h3 class="display-5 fw-bold m-0">@course?.LecturerName</h3>
+									@* <span class="mute-alt">Technology Facilitator</span> *@
+								</div>
+							</div>
+							<div class="course-reviews">
+								<h6>Reviews</h6>
+								<div class="d-flex align-items-center">
+									<div class="ratings">
+										<img src="images/icons/star.png" alt="">
+										<img src="images/icons/star.png" alt="">
+										<img src="images/icons/star.png" alt="">
+										<img src="images/icons/star.png" alt="">
+										<img src="images/icons/star.png" alt="">
+									</div>
+									<span>(03 Reviews)</span>
+								</div>
+							</div>
+						</div>
+						<!-- Course Tabs Start -->
+
+						<div class="course-nav">
+							<ul class="nav" id="myTab" role="tablist">
+								<li class="nav-item" role="presentation">
+									<button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home"
+										type="button" role="tab" aria-controls="home" aria-selected="true"><i
+											class="feather-icon icon-bookmark"></i> Overview</button>
+								</li>
+								<li class="nav-item" role="presentation">
+									<button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile"
+										type="button" role="tab" aria-controls="profile" aria-selected="false"><i
+											class="feather-icon icon-box"></i> Curriculum</button>
+								</li>
+								<li class="nav-item" role="presentation">
+									<button class="nav-link" id="contact-tab" data-bs-toggle="tab" data-bs-target="#contact"
+										type="button" role="tab" aria-controls="contact" aria-selected="false"><i
+											class="feather-icon icon-user"></i> Instructor</button>
+								</li>
+								<li class="nav-item" role="presentation">
+									<button class="nav-link" id="review-tab" data-bs-toggle="tab" data-bs-target="#review"
+										type="button" role="tab" aria-controls="review" aria-selected="false"><i
+											class="feather-icon icon-star"></i> Review</button>
+								</li>
+								
+							</ul>
+							<div class="tab-content inner-sec" id="myTabContent">
+								<div class="tab-pane fade show active" id="home" role="tabpanel"
+									aria-labelledby="home-tab">
+									<h2 class="display-4 fw-bold">
+										Course Overview
+									</h2>
+									<p>Acknowledge any challenges or concerns related to implementing in education. Discuss
+										possible solutions or
+										ways to address these challenges, emphasizing the importance of perseverance in adopting
+										innovative educational
+										approaches. Speculate on the future implications and developments related to your chosen
+										topic. Consider how it might
+										evolve and continue to shape the education landscape</p>
+									<ul>
+										<li>Energy-efficient designs are also gaining momentum</li>
+										<li>The construction industry is increasingly leveraging smart technologies</li>
+										<li>Embracing these trends not only aligns with global environmental goals</li>
+									</ul>
+									<h3 class="display-5 my-4">Fundamentals of UI/UX Design</h3>
+									<p>Acknowledge any challenges or concerns related to implementing in education. Discuss
+										possible solutions or
+										ways to address these challenges, emphasizing the importance of perseverance in adopting
+										innovative educational
+										approaches. Speculate on the future implications and developments related to your chosen
+										topic. Consider how it might
+										evolve and continue to shape the education landscape</p>
+								</div>
+								<div class="tab-pane fade" id="contact" role="tabpanel"
+									aria-labelledby="contact-tab">
+									<h2 class="display-4">Instructor</h2>
+									<div class="author-card d-flex align-items-center border rounded-2 bg-shade p-3">
+										<div class="author-img">
+											<img src="images/instructor-lg.jpg" alt="Instructor" class="img-fluid rounded-3">
+										</div>
+										<div class="author-text">
+											<h4>@course?.LecturerName</h4>
+											<small class="text-mute">Arts Instructor</small>
+											<p>This is a comprehensive outline, and the actual content and duration of each module may vary based on the course
+												format
+												and duration. Hands-on activities, case studies, and real-world projects should be integrated throughout the course
+												to
+												enhance practical skills.</p>
+												<div class="social-share white mt-3">
+													<a href="#"><i class="feather-icon icon-facebook"></i></a>
+													<a href="#"><i class="feather-icon icon-twitter"></i></a>
+													<a href="#"><i class="feather-icon icon-youtube"></i></a>
+													<a href="#"><i class="feather-icon icon-linkedin"></i></a>
+												</div>
+										</div>
+									</div>
+								</div><!-- Tab Item End -->>
+							</div>
+						</div>
+					</article> <!-- Article End -->
+				</div> <!-- Course Details End -->
+				<div class="col-lg-4">
+					<aside class="sidebar ps-lg-4">
+						<div class="widget price-widget border p-4 rounded-3">
+							<h3 class="display-4">$@course?.Price @* <del>$36.99</del> *@</h3>
+							<div class="btn-cta mt-4">
+								@* <a href="#" class="btn btn-primary rounded-2 w-100">Add to Cart</a> *@
+								@* <a href="#" class="mt-3 btn btn-outline-primary rounded-2 w-100">Subscribe</a> *@
+								<a href="/checkout" class="mt-3 btn btn-outline-primary rounded-2 w-100">Subscribe</a>
+							</div>
+							<div class="price-widget-inner">
+								<ul>
+									<li><i class="feather-icon icon-calendar"></i>Published <span>@course?.PublishedDate.ToString("dd MMM yyyy")</span></li>
+									<li><i class="feather-icon icon-user"></i>Instructor <span>@course?.LecturerName</span></li>
+									<li><i class="feather-icon icon-film"></i>Duration <span>@course?.Duration</span></li>
+									<li><i class="feather-icon icon-users"></i>Enrolled <span>@course?.StudentsEnrolled</span></li>
+									<li><i class="feather-icon icon-award"></i>Course level <span>@course?.CourseLevel</span></li>
+									<li><i class="feather-icon icon-globe"></i>Language <span>@course?.CourseLanguage</span></li>
+								</ul>
+							</div>
+						</div> <!-- Widget End -->
+					</aside>
+				</div> <!-- Sidebar End -->
+			</div>
+		</div>
+	</section>
+	<!-- Course Details End -->
+
+@code {
+	[Parameter] public Guid Id { get; set; }
+
+    private CourseModel? course;
+
+    protected override async Task OnInitializedAsync()
+    {
+        course = await _service.GetCourseByIdAsync(Id);
+    }
+
+    private async Task EnrollInCourse()
+    {
+        // Future enhancement: Trigger enrollment API call here
+        await Task.Delay(300);
+        Console.WriteLine($"Enroll clicked for course: {course?.Title}");
+    }
+}

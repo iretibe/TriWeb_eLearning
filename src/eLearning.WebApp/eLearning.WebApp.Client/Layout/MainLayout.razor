@@ -1,0 +1,48 @@
+﻿@using Blazored.SessionStorage
+@using eLearning.WebApp.Client.Models
+@using eLearning.WebApp.Client.Services
+@inherits LayoutComponentBase
+
+@inject ISessionStorageService _sessionStorage
+@inject CartService _cartService
+
+
+<div class="page">
+
+    <main>
+        <Header />
+
+        <main class="main-content">
+            @Body
+
+            <Footer />
+        </main>        
+
+        <!-- Scroll Top -->
+        <div class="scroll-top">
+            <svg class="progress-circle svg-content" height="100%" viewBox="-1 -1 102 102" width="100%">
+                <path d="M50,1 a49,49 0 0,1 0,98 a49,49 0 0,1 0,-98"
+                      fill="none" stroke="black" stroke-width="2">
+                </path>
+            </svg>
+        </div>
+        <!-- Scroll Top End -->
+    </main>
+</div>
+
+@code {
+    private bool _hasInitializedCart = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_hasInitializedCart)
+        {
+            _hasInitializedCart = true;
+
+            var cart = await _sessionStorage.GetItemAsync<List<CourseModel>>("cart") ?? new();
+            _cartService.SetCart(cart);
+
+            StateHasChanged(); // Refresh UI (for cart icon count, etc.)
+        }
+    }
+}

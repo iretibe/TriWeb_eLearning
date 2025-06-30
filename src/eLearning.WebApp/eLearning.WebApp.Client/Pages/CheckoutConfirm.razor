@@ -1,0 +1,45 @@
+﻿@page "/checkout-confirm"
+
+@using eLearning.WebApp.Client.Services
+@inject NavigationManager Nav
+@inject IPaymentService _paymentService
+@inject IOrderService _orderService
+@inject AuthenticationStateProvider AuthProvider
+
+<p>Verifying your payment, please wait...</p>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "trxref")]
+    public string? TransactionRef { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var reference = TransactionRef;
+
+        if (!string.IsNullOrWhiteSpace(reference))
+        {
+            var authState = await AuthProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                var verified = await _paymentService.VerifyPaystackTransactionAsync(reference);
+
+                if (verified)
+                {
+                    var orderId = await _orderService.GetOrderIdByReferenceAsync(reference);
+
+                    if (orderId != Guid.Parse("00000000-0000-0000-0000-000000000000"))
+                    {
+                        await _orderService.MarkOrderAsPaidAsync(orderId, reference);
+                        Nav.NavigateTo("/my-courses", forceLoad: true);
+                        return;
+                    }
+                }
+            }
+        }
+
+        Nav.NavigateTo("/payment-failed", forceLoad: true);
+    }
+}

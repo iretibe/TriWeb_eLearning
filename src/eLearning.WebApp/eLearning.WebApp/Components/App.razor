@@ -1,0 +1,83 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Blazor Head Section with Custom Template Metadata -->
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+    <!-- SEO & Metadata -->
+    <meta name="description"
+          content="An ideal template for online education, e-Learning, Course School, Online School, Kindergarten, Classic LMS, University, Language Academy, Coaching, Online Course, Single Course, and Course marketplace." />
+    <meta name="keywords"
+          content="bootstrap 5, online course, education, creative, gulp, business, minimal, modern, course, one page, responsive, saas, e-Learning, seo, startup, html5, site template" />
+    <meta name="author" content="theme-village" />
+
+    <base href="/" />
+
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" href="images/favicon.png" />
+    <link rel="icon" type="image/png" href="images/favicon.ico" />
+
+    <!-- Template Styles -->
+    <link rel="stylesheet" href="css/feather.css" />
+    <link rel="stylesheet" href="css/nice-select2.css" />
+    <link rel="stylesheet" href="css/glightbox.min.css" />
+    <link rel="stylesheet" href="css/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+
+    <!-- Blazor Styles -->
+    <link rel="stylesheet" href="@Assets["lib/bootstrap/dist/css/bootstrap.min.css"]" />
+    <link rel="stylesheet" href="@Assets["app.css"]" />
+    <link rel="stylesheet" href="@Assets["eLearning.Web.styles.css"]" />
+
+    <ImportMap />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <HeadOutlet @rendermode="PageRenderMode" />
+</head>
+
+<body>
+    <!-- JavaScript Assets -->
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script src="js/swiper-bundle.min.js"></script>
+    <script src="js/nice-select2.js"></script>
+    <script src="js/glightbox.min.js"></script>
+    <script src="js/isotope.pkgd.min.js"></script>
+    <script src="js/purecounter_vanilla.js"></script>
+    <script src="js/plyr.min.js"></script>
+    <script src="js/lenis.min.js"></script>
+    <script src="js/custom.js"></script>
+    <script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"rayId":"9541dd2b5dee932e","version":"2025.6.2","r":1,"serverTiming":{"name":{"cfExtPri":true,"cfEdge":true,"cfOrigin":true,"cfL4":true,"cfSpeedBrain":true,"cfCacheStatus":true}},"token":"389fa74406c44f21b129709ce8a3ec16","b":1}' crossorigin="anonymous"></script>
+    <Routes @rendermode="PageRenderMode" />
+
+    <script>
+        window.redirectToPaystack = function (url) {
+            if (url && typeof url === 'string') {
+                window.open(url, '_blank');
+            }
+        };
+    </script>
+
+    <script src="_framework/blazor.web.js"></script>
+
+     <!-- Custom JavaScript function for invoking PaymentSubmission -->
+    <script>
+        function invokePaymentSubmission() {
+            console.log("invokePaymentSubmission called");
+            DotNet.invokeMethodAsync('LearningPlatform.Web', 'PaymentSubmission')
+                .then(() => console.log("PaymentSubmission method invoked successfully"))
+                .catch(error => console.error("Error invoking PaymentSubmission:", error));
+        }
+    </script>
+</body>
+
+</html>
+
+@code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    private IComponentRenderMode? PageRenderMode =>
+        HttpContext.AcceptsInteractiveRouting() ? InteractiveWebAssembly : null;
+}

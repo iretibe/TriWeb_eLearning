@@ -1,0 +1,272 @@
+﻿@page "/checkout/{id:guid}"
+
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@using PayStack.Net
+@using eLearning.WebApp.Client.Models
+@using eLearning.WebApp.Client.Services
+@using Blazored.SessionStorage
+@inject ICourseService _service
+@inject IOrderService _orderService
+@inject IUserService _userService
+@inject IPaymentService _paymentService
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthProvider
+@inject ISessionStorageService _sessionStorage
+@inject IConfiguration _configuration
+@inject IJSRuntime JS
+
+<!-- Promo Section Start -->
+   <section class="promo-sec" style="background: url('images/promo-bg.jpg')no-repeat center center / cover;">
+      <img src="images/promo-left.png" alt="" class="anim-img">
+      <img src="images/promo-right.png" alt="" class="anim-img anim-right">
+      <div class="container">
+         <div class="row">
+            <div class="col-lg-12 text-center">
+               <h1 class="display-2 text-white">Checkout</h1>
+               <nav aria-label="breadcrumb mt-0">
+                  <ol class="breadcrumb">
+                     <li class="breadcrumb-item"><a href="/">Home</a></li>
+                     <li class="breadcrumb-item active" aria-current="page">Checkout</li>
+                  </ol>
+               </nav>
+            </div>
+         </div>
+      </div>
+   </section>
+   <!-- Promo Section End -->
+
+   <!-- Checkout Section Start -->
+   <section class="checkout-section sec-padding">
+        <div class="container">
+            @* <form class="form checkout-form" @onsubmit="PlaceOrder"> *@
+                <div class="row">
+                    <div class="col-lg-8 col-sm-12">
+                        <h3 class="sub-title">Billing Details:</h3>
+                        <div class="checkout-billingform bg-shade border rounded p-lg-5 p-3 mt-5">
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <label>First name*</label>
+                                    <input type="text" @bind="order.FirstName" class="form-control" required />
+                                </div>
+                                <div class="col-lg-6">
+                                    <label>Last name*</label>
+                                    <input type="text" @bind="order.LastName" class="form-control" required />
+                                </div>
+                                <div class="col-lg-6">
+                                    <label>Country*</label>
+                                    <select @bind="order.Country" class="form-control">
+                                        @foreach (var country in countries)
+                                        {
+                                            <option value="@country">@country</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-lg-6">
+                                    <label>Street address *</label>
+                                    <input type="text" @bind="order.Street" class="form-control" required />
+                                </div>
+                                <div class="col-lg-6">
+                                    <label>State</label>
+                                    <input type="text" @bind="order.State" class="form-control" />
+                                </div>
+                                <div class="col-lg-6">
+                                    <label>Postcode</label>
+                                    <input type="text" @bind="order.PostCode" class="form-control" />
+                                </div>
+                                <div class="col-lg-6">
+                                    <label>Phone</label>
+                                    <input type="text" @bind="order.Phone" class="form-control" />
+                                </div>
+                                <div class="col-lg-6">
+                                    <label>Email Address</label>
+                                    <input type="email" @bind="order.Email" class="form-control" />
+                                </div>
+                                <div class="col-12">
+                                    <label>Company (Optional)</label>
+                                    <input type="text" @bind="order.Company" class="form-control" />
+                                </div>
+                                <div class="col-12">
+                                    <label>Order notes (Optional)</label>
+                                    <textarea @bind="order.Notes" class="form-control"></textarea>
+                                </div>
+                                <div class="col-12 mt-4">
+                                    <label>Subscription Type</label>
+                                    
+                                    @if (course != null)
+                                    {
+                                       <select @bind="order.SubscriptionType" class="form-control">
+                                            <option value="monthly">Monthly - GHS @($"{course.Price:N2}")</option>
+                                            @{
+                                                var yearlyPrice = course.Price * 12;
+                                            }
+                                            <option value="yearly">Yearly - GHS @($"{yearlyPrice:N2}")</option>
+                                        </select>
+                                    }
+                                    else
+                                    {
+                                        <p>Loading pricing...</p>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4 col-sm-8">
+                        <aside class="order-summery ms-xl-5">
+                            <h3 class="sub-title">Summary</h3>
+                            <div class="cart-totals mt-5 bg-shade p-4 rounded border">
+                                <table>
+                                    <tbody>
+                                        @if (course != null)
+                                        {
+                                            <tr>
+                                                <td>Course:</td>
+                                                <td>@course.Title</td>
+                                            </tr>
+                                        }
+                                        else
+                                        {
+                                            <tr>
+                                                <td colspan="2">Loading course details...</td>
+                                            </tr>
+                                        }
+                                        <tr>
+                                            <td>Subscription:</td>
+                                            <td>@order.SubscriptionType</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Total:</td>
+                                            <td>
+                                                <strong>
+                                                    @if (course != null)
+                                                    {
+                                                        @(order.SubscriptionType == "monthly"
+                                                            ? $"GHS {course.Price:N2}"
+                                                            : $"GHS {(course.Price * 12):N2}")
+                                                    }
+                                                    else
+                                                    {
+                                                        <em>Loading...</em>
+                                                    }
+                                                </strong>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="text-center mt-4">
+                                    <button @onclick="PlaceOrder" class="btn btn-primary d-block w-100">Pay Now</button>
+                                </div>
+                            </div>
+                        </aside>
+                    </div>
+                </div>
+            @* </form> *@
+        </div>
+    </section>
+   <!-- Checkout Section End -->
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    private CourseModel? course;
+    private SubscriptionOrderModel order = new();
+    private PayStackApi? Paystack;
+    private bool _hasCheckedStorage = false;
+
+    private readonly List<string> countries = new()
+    {
+        "United States", "Mexico", "Australia", "Germany", "Sweden", "France",
+        "Canada", "Ghana", "Nigeria", "Kenya", "India", "South Africa", "Brazil"
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        course = await _service.GetCourseByIdAsync(Id);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_hasCheckedStorage)
+        {
+            _hasCheckedStorage = true;
+            course ??= await _service.GetCourseByIdAsync(Id);
+
+            var authState = await AuthProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                var email = user.Identity?.Name;
+                if (!string.IsNullOrWhiteSpace(email))
+                {
+                    var exists = await _sessionStorage.ContainKeyAsync("pendingOrder");
+                    if (exists)
+                    {
+                        var savedOrder = await _sessionStorage.GetItemAsync<SubscriptionOrderModel>("pendingOrder");
+                        await _sessionStorage.RemoveItemAsync("pendingOrder");
+                        await TriggerPaystackAsync(savedOrder!);
+                    }
+                }
+            }
+        }
+    }
+
+    private async Task PlaceOrder()
+    {
+        course ??= await _service.GetCourseByIdAsync(Id);
+        order.CourseId = course.Id;
+        order.Price = order.SubscriptionType == "monthly" ? course.Price : course.Price * 12;
+
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user?.Identity?.IsAuthenticated != true)
+        {
+            await _sessionStorage.SetItemAsync("pendingOrder", order);
+            Nav.NavigateTo($"/account/register?returnUrl=/checkout/{Id}", forceLoad: true);
+            return;
+        }
+
+        await TriggerPaystackAsync(order);
+    }
+
+    private async Task TriggerPaystackAsync(SubscriptionOrderModel payOrder)
+    {
+        // Get authenticated user info
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        var email = user.Identity?.Name ?? "";
+
+        // Ensure userId is set
+        var userId = await _userService.GetUserIdByEmailAsync(email);
+        payOrder.UserId = userId;
+
+        // Assign reference
+        var reference = GenerateReference();
+        payOrder.TransactionReference = reference;
+
+        // Set price in case it's not already calculated
+        if (course != null && payOrder.Price == 0)
+        {
+            payOrder.Price = payOrder.SubscriptionType == "monthly"
+                ? course.Price
+                : course.Price * 12;
+        }
+
+        // Save Order first (pending status)
+        await _orderService.CreateOrderAsync(payOrder);
+
+        // Convert to Kobo
+        var amountInKobo = Convert.ToInt32(payOrder.Price);
+
+        // Get payment URL from backend
+        var payUrl = await _paymentService.InitializePaystackAsync(email, amountInKobo, reference);
+
+        // Open Paystack payment page in a new tab
+        await JS.InvokeVoidAsync("redirectToPaystack", payUrl);
+    }
+
+    private string GenerateReference() =>
+        $"ELRN-{Guid.NewGuid().ToString("N").Substring(0, 12).ToUpper()}";
+}

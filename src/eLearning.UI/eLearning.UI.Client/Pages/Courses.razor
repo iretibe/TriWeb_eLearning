@@ -1,0 +1,102 @@
+﻿@page "/courses"
+@using Blazorise.DataGrid
+@using eLearning.UI.Client.Models
+@using eLearning.UI.Client.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@inject ICourseService _service
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<h3>Course Management</h3>
+
+<DataGrid TItem="CourseModel"
+          Data="@courses"
+          Editable="true"
+          EditMode="DataGridEditMode.Form"
+          RowInserted="@(e => OnRowInserted(e))"
+          RowUpdated="@(e => OnRowUpdated(e))"
+          RowRemoved="@(e => OnRowRemoved(e))"
+          ShowPager="true"
+          ShowPageSizes
+          PageSize="10"
+          Hoverable
+          Responsive
+          ResponsiveBreakpoint="Breakpoint.Tablet">
+
+    <DataGridCommandColumn />
+    <DataGridColumn Field="@nameof(CourseModel.Title)" Caption="Title" Editable="true" />
+    <DataGridColumn Field="@nameof(CourseModel.Description)" Caption="Description" Editable="true" />
+    <DataGridColumn Field="@nameof(CourseModel.Price)" Caption="Price" Editable="true" />
+    <DataGridColumn Field="@nameof(CourseModel.Duration)" Caption="Duration" Editable="true" />
+    <DataGridColumn Field="@nameof(CourseModel.ImageUrl)" Caption="Image URL" Editable="false" />
+    <DataGridColumn Caption="Image Upload">
+        <EditTemplate Context="editContext">
+            <InputFile OnChange="@(e => OnImageSelected(e, editContext.Item))" />
+        </EditTemplate>
+    </DataGridColumn>
+    <DataGridColumn Caption="Image Upload">
+        <EditTemplate Context="editContext">
+            <div class="d-flex flex-column gap-2">
+                <InputFile OnChange="@(e => OnImageSelected(e, editContext.Item))" />
+
+                @if (!string.IsNullOrWhiteSpace(editContext.Item.ImageUrl))
+                {
+                    <img src="@editContext.Item.ImageUrl"
+                         alt="Course Image"
+                         style="max-width: 100px; height: auto;"
+                         class="img-thumbnail mt-1" />
+                }
+            </div>
+        </EditTemplate>
+    </DataGridColumn>
+
+    <DataGridColumn Field="@nameof(CourseModel.LecturerName)" Caption="Lecturer" Editable="false" />
+</DataGrid>
+
+@code {
+    private List<CourseModel> courses = new();
+    private string? currentUserId;
+    private string? currentUserName;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        currentUserId = user.FindFirst(c => c.Type.Contains("nameidentifier"))?.Value;
+        currentUserName = user.Identity?.Name ?? "Unknown";
+
+        courses = await _service.GetAllCoursesAsync();
+    }
+
+    private async Task OnRowInserted(SavedRowItem<CourseModel, Dictionary<string, object>> e)
+    {
+        if (!string.IsNullOrWhiteSpace(currentUserId))
+            e.Item.LecturerId = currentUserId;
+
+        if (!string.IsNullOrWhiteSpace(currentUserName))
+            e.Item.LecturerName = currentUserName;
+
+        if (await _service.CreateCourseAsync(e.Item))
+            courses = await _service.GetAllCoursesAsync();
+    }
+
+    private async Task OnRowUpdated(SavedRowItem<CourseModel, Dictionary<string, object>> e)
+    {
+        if (await _service.UpdateCourseAsync(e.Item))
+            courses = await _service.GetAllCoursesAsync();
+    }
+
+    private async Task OnRowRemoved(CourseModel course)
+    {
+        if (await _service.DeleteCourseAsync(course.Id))
+            courses = await _service.GetAllCoursesAsync();
+    }
+
+    private void OnImageSelected(InputFileChangeEventArgs e, CourseModel course)
+    {
+        if (e.FileCount > 0)
+        {
+            course.ImageFile = e.File;
+        }
+    }
+}

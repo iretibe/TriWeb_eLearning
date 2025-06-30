@@ -1,0 +1,145 @@
+﻿@using eLearning.WebApp.Client.Services
+@inject CartService _cartService
+
+<!-- Header Start -->
+<header class="header header-3">
+  <div class="sticky-height"></div>
+
+  <!-- Navigation Menu Start -->
+  <div class="header-nav-wrapper header-sticky">
+    <nav class="navbar navbar-expand-xl border-bottom">
+      <div class="container-fluid px-lg-5 px-3">
+
+        <!-- Logo -->
+        <NavLink class="navbar-brand" href="/">
+          <img src="images/logo.png" alt="Logo" />
+        </NavLink>
+
+        <!-- Header Actions -->
+        <div class="header-actions d-none d-sm-flex position-relative order-xl-3 d-flex align-items-center justify-content-between">
+
+        <NavLink href="/cart" class="text-reset position-relative icon">
+            <i class="feather-icon icon-shopping-bag"></i>
+            <div class="cart-num">@(_cartService.Items?.Count ?? 0)</div>
+        </NavLink>
+
+          <!-- Admin Profile Icon -->
+          <a class="text-reset icon border rounded-2 admin-user" data-bs-toggle="collapse" href="#collapseAdminMenu"
+             role="button" aria-expanded="false" aria-controls="collapseAdminMenu">
+            <i class="feather-icon icon-user"></i>
+          </a>
+
+          <!-- Admin Menu -->
+          <div class="admin-menu pt-3 bg-white collapse" id="collapseAdminMenu">
+            <div class="d-flex avatar border-bottom pb-3">
+              <img class="img-fluid border rounded-circle" src="images/ava-sm1.jpg" width="50" alt="avatar" />
+              <div class="grettings ps-3">
+                <h6 class="mb-0">Abdul Djalal</h6>
+              </div>
+            </div>
+
+            <!-- Admin Navigation -->
+            <nav class="dashboard-nav mt-1">
+              <ul class="list-unstyled nav flex-column">
+                <li>
+                  <NavLink class="nav-link" href="/instructor-dashboard">
+                    <i class="feather-icon icon-home"></i><span>Dashboard</span>
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink class="nav-link" href="/instructor-profile">
+                    <i class="feather-icon icon-user"></i><span>My Profile</span>
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink class="nav-link" href="/instructor-enrolled-courses">
+                    <i class="feather-icon icon-book-open"></i><span>Enrolled Courses</span>
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink class="nav-link" href="/instructor-wishlist">
+                    <i class="feather-icon icon-gift"></i><span>Wishlist</span>
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink class="nav-link" href="/instructor-reviews">
+                    <i class="feather-icon icon-star"></i><span>Reviews</span>
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink class="nav-link" href="/instructor-order-history">
+                    <i class="feather-icon icon-shopping-bag"></i><span>Order History</span>
+                  </NavLink>
+                </li>
+                <li class="border-bottom"></li>
+                <li>
+                  <NavLink class="nav-link" href="/instructor-assignments">
+                    <i class="feather-icon icon-briefcase"></i><span>Assignments</span>
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink class="nav-link" href="/instructor-announcements">
+                    <i class="feather-icon icon-bell"></i><span>Announcements</span>
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink class="nav-link" href="/">
+                    <i class="feather-icon icon-log-out"></i><span>Logout</span>
+                  </NavLink>
+                </li>
+              </ul>
+            </nav>
+          </div>
+
+          <!-- Enroll Button -->
+          @* <NavLink href="/signup" class="btn d-none d-sm-block btn-primary shadow border-0 rounded-2">
+            Enroll Now
+          </NavLink> *@
+        </div>
+
+        <!-- Hamburger Menu (for mobile) -->
+        <button class="navbar-toggler offcanvas-nav-btn" type="button">
+          <span class="feather-icon icon-menu"></span>
+        </button>
+
+        <!-- Mobile Offcanvas Navigation -->
+        <div class="offcanvas bg-info offcanvas-start offcanvas-nav">
+          <div class="offcanvas-header">
+            <NavLink href="/" class="text-inverse">
+              <img src="images/logo.png" alt="Logo" />
+            </NavLink>
+            <button type="button" class="btn-close bg-primary" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+          </div>
+
+          <div class="offcanvas-body pt-0 align-items-center">
+            <ul class="navbar-nav mx-auto align-items-lg-center">
+              <li class="nav-item">
+                <NavLink class="nav-link" href="/">Home</NavLink>
+              </li>
+              <li class="nav-item">
+                <NavLink class="nav-link" href="/courses">Courses</NavLink>
+              </li>
+              <li class="nav-item">
+                <NavLink class="nav-link" href="/pricing">Pricing Plan</NavLink>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </nav>
+  </div>
+</header>
+<!-- Header End -->
+
+@code {
+    protected override void OnInitialized()
+    {
+        _cartService.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        _cartService.OnChange -= StateHasChanged;
+    }
+}
