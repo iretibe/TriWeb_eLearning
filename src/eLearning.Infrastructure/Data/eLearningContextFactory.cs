@@ -8,7 +8,7 @@ namespace eLearning.Infrastructure.Data
         public eLearningContext CreateDbContext(string[] args)
         {
             var optionsBuilder = new DbContextOptionsBuilder<eLearningContext>();
-            optionsBuilder.UseSqlServer("Server=xxx;Database=xxx;User ID=sa;Password=xxx@2023;Trusted_Connection=False;MultipleActiveResultSets=True;TrustServerCertificate=True");
+            optionsBuilder.UseSqlServer("Server=xxx;Database=eLearning;User ID=sa;Password=xxx;Trusted_Connection=False;MultipleActiveResultSets=True;TrustServerCertificate=True");
 
             return new eLearningContext(optionsBuilder.Options);
         }
