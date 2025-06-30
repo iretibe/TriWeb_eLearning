@@ -1,21 +1,33 @@
 # TriWeb_eLearning
-
 This project demonstrates my proficiency in building production-ready Blazor apps using modern patterns like CQRS, MediatR, EF Core, and third-party integrations (Paystack).
 
-**What the project is:** A learning platform for online courses
+**Technologies Used:**
+  - ASP.NET Core 9
+  - Blazor WASM
+  - Entity Framework Core (Code-First)
+  - SQL Server
+  - MediatR (CQRS pattern)
+  - Paystack Payment Integration
+  - Identity for Authentication
+  - Bootstrap 5
+  - Blazored.SessionStorage
 
 **Key features:** 
-  User Registration
-  Paystack integration
-  Role-based access
+  - User Registration and Login (Email confirmation)
+  - Add-to-Cart and Purchase Flow
+  - Paystack Payment Gateway Integration
+  - Email Confirmation with ASP.NET Core Identity
+  - Course Enrollment and Access After Payment
+  - Upload and Stream Course Videos
+  - Role-based Access for Admins and Learners
+  - Email Logging and Payment Transaction Recording
 
-**Tech Stack:**
-  .NET 9
-  Blazor
-  EF Core
-  Paystack API
-  SQL Server
-
-**How to run it:** Locally
+**Design Patterns & Practices:**
+  - Clean Architecture principles
+  - CQRS with MediatR
+  - Dependency Injection
+  - Separation of Concerns
+  - Secure handling of file uploads
+  - Responsive UI using Bootstrap
 
 **Screenshots:** 
