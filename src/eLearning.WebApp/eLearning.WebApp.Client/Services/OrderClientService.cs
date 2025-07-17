@@ -6,10 +6,13 @@ namespace eLearning.WebApp.Client.Services
     public class OrderClientService : IOrderService
     {
         private readonly HttpClient _httpClient;
+        private readonly string _backendUrl;
 
-        public OrderClientService(HttpClient httpClient)
+        public OrderClientService(HttpClient httpClient, IConfiguration configuration)
         {
             _httpClient = httpClient;
+            _backendUrl = configuration["ApiUrls:BackendUrl"]
+                ?? throw new InvalidOperationException("Backend URL is missing");
         }
 
         public async Task<Guid> CreateOneTimePurchaseOrderAsync(string userId, List<CourseModel> courses, string reference)
@@ -31,7 +34,7 @@ namespace eLearning.WebApp.Client.Services
                 }
             };
 
-            var response = await _httpClient.PostAsJsonAsync("api/Orders/CreateOneTimePurchaseOrder", order);
+            var response = await _httpClient.PostAsJsonAsync($"{_backendUrl}/api/Orders/CreateOneTimePurchaseOrder", order);
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<Guid>();
         }
@@ -40,35 +43,57 @@ namespace eLearning.WebApp.Client.Services
         {
             order.Status = "Paid"; // Ensure the order status is set to Pending
             order.OrderDate = DateTime.UtcNow; // Set the order date to current UTC time
-            var response = await _httpClient.PostAsJsonAsync("api/Orders/CreateOrder", order);
+            var response = await _httpClient.PostAsJsonAsync($"{_backendUrl}/api/Orders/CreateOrder", order);
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<Guid>();
         }
 
         public async Task<List<OrderModel>> GetAllOneTimePurchaseOrdersAsync()
         {
-            var response = await _httpClient.GetAsync("https://localhost:7012/api/Orders/GetAllOneTimePurchaseOrders");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<List<OrderModel>>() ?? new();
+            var response = await _httpClient.GetFromJsonAsync<List<OrderModel>>($"{_backendUrl}/api/Orders/GetAllOneTimePurchaseOrders");
+
+            return response ?? new List<OrderModel>();
         }
 
         public async Task<List<OrderModel>> GetOneTimePurchaseOrdersByUserIdAsync(string userId)
         {
-            var response = await _httpClient.GetAsync($"https://localhost:7012/api/Orders/GetOneTimePurchaseOrdersByUserId/{userId}");
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<List<OrderModel>>() ?? new();
+            try
+            {
+                var response = await _httpClient.GetAsync($"{_backendUrl}/api/Orders/GetOneTimePurchaseOrdersByUserId/{userId}");
+                
+                response.EnsureSuccessStatusCode();
+
+                var orders = await response.Content.ReadFromJsonAsync<List<OrderModel>>();
+                return orders ?? new List<OrderModel>();
+            }
+            catch (HttpRequestException ex)
+            {
+                // Log or handle error
+                throw new ApplicationException("Failed to load orders.", ex);
+            }
         }
 
         public async Task<Guid> GetOrderIdByReferenceAsync(string reference)
         {
-            var response = await _httpClient.GetAsync($"https://localhost:7012/api/Orders/GetOrderIdByReference/{reference}");
-            return await response.Content.ReadFromJsonAsync<Guid>();
+            try
+            {
+                var response = await _httpClient.GetAsync($"{_backendUrl}/api/Orders/GetOrderIdByReference/{reference}");
+
+                response.EnsureSuccessStatusCode();
+
+                return await response.Content.ReadFromJsonAsync<Guid>();
+            }
+            catch (HttpRequestException ex)
+            {
+                // Log or handle error
+                throw new ApplicationException("Failed to load order.", ex);
+            }
         }
 
         public async Task MarkOrderAsPaidAsync(Guid orderId, string transactionRef)
         {
             var command = new { OrderId = orderId, TransactionReference = transactionRef };
-            var response = await _httpClient.PostAsJsonAsync("https://localhost:7012/api/Orders/MarkOrderAsPaid", command);
+            var response = await _httpClient.PostAsJsonAsync($"{_backendUrl}/api/Orders/MarkOrderAsPaid", command);
             response.EnsureSuccessStatusCode();
         }
     }

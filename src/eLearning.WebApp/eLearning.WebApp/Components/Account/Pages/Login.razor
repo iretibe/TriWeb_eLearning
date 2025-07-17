@@ -6,6 +6,7 @@
 @using eLearning.WebApp.Data
 
 @inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
 @inject ILogger<Login> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
@@ -50,7 +51,11 @@
 								        </div>
 								        <a href="Account/ForgotPassword" class="text-reset">Forget Password?</a>
 							        </div>
-							        <p>Don't have an account? <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))" class="text-primary fw-bold">Sign Up Now</a></p>
+							        @* <p>Don't have an account? <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl }))" class="text-primary fw-bold">Sign Up Now</a></p> *@
+
+                                    <p>Don't have an account? 
+                                      <a href="@(NavigationManager.GetUriWithQueryParameters("Account/Register", new Dictionary<string, object?> { ["ReturnUrl"] = ReturnUrl, ["Role"] = Role }))" class="text-primary fw-bold">Sign Up Now</a>
+                                    </p>
 						        </div>
                         </EditForm>
                     </div>
@@ -72,6 +77,9 @@
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
 
+    [SupplyParameterFromQuery]
+    public string? Role { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         if (HttpMethods.IsGet(HttpContext.Request.Method))
@@ -92,8 +100,22 @@
             // RedirectManager.RedirectTo(ReturnUrl);
             Logger.LogInformation("User logged in.");
 
+            var user = await SignInManager.UserManager.FindByEmailAsync(Input.Email);
+            
+            // Role enforcement
+            if (!string.IsNullOrWhiteSpace(Role))
+            {
+                var isInRole = await SignInManager.UserManager.IsInRoleAsync(user!, Role);
+                if (!isInRole)
+                {
+                    await SignInManager.SignOutAsync();
+                    errorMessage = $"This account is not registered as a '{Role}'.";
+                    return;
+                }
+            }
+
             // If the user has a pending cart, always redirect to /cart
-            if (ReturnUrl != null && ReturnUrl.Contains("/cart", StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrEmpty(ReturnUrl) && ReturnUrl.Contains("/cart", StringComparison.OrdinalIgnoreCase))
             {
                 RedirectManager.RedirectTo("/cart");
             }

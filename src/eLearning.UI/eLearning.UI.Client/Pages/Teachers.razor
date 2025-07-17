@@ -1,0 +1,149 @@
+﻿@page "/teachers"
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+@using System.Net.Http.Json
+@using Blazorise.DataGrid
+@using eLearning.UI.Client.Models
+@using eLearning.UI.Client.Services
+
+@inject HttpClient Http
+@inject AppSettingsService AppSettings
+@inject IConfiguration Configuration
+
+<h3 class="mb-3">Teachers Management</h3>
+
+<div class="mb-3">
+    <Label>Filter by Role:</Label>
+    <Select TValue="string" bind-SelectedValue="selectedRoleFilter" @oninput="e => OnRoleFilterChanged(((ChangeEventArgs)e).Value?.ToString())">
+        @foreach (var role in availableRoles)
+        {
+            <SelectItem Value="@role">@role</SelectItem>
+        }
+    </Select>
+</div>
+
+<DataGrid TItem="TeacherModel"
+          Data="@filteredTeachers"
+          Editable="true"
+          ShowPager="true"
+          PageSize="10"
+          EditMode="DataGridEditMode.Form"
+          RowInserted="@OnRowInserted"
+          RowUpdated="@OnRowUpdated"
+          RowRemoved="@OnRowRemoved"
+          Responsive="true">
+
+    <DataGridColumns>
+        <DataGridColumn TItem="TeacherModel" Field="@nameof(TeacherModel.UserName)" Caption="Username" Editable="true" />
+        <DataGridColumn TItem="TeacherModel" Field="@nameof(TeacherModel.Email)" Caption="Email" Editable="true" />
+
+        <DataGridColumn TItem="TeacherModel" Caption="Role" Editable="true">
+            <EditTemplate>
+                <Select TValue="string" bind-SelectedValue="context.SelectedRole">
+                    @foreach (var role in availableRoles)
+                    {
+                        <SelectItem Value="@role">@role</SelectItem>
+                    }
+                </Select>
+            </EditTemplate>
+
+            @* <EditTemplate>
+                <Select TValue="string" bind-SelectedValue="context.SelectedRole">
+                    @foreach (var role in availableRoles.Where(r => r != "All"))
+                    {
+                        <SelectItem Value="@role">@role</SelectItem>
+                    }
+                </Select>
+            </EditTemplate> *@
+            <DisplayTemplate>
+                @string.Join(", ", context.Roles)
+            </DisplayTemplate>
+        </DataGridColumn>
+
+        <DataGridCommandColumn TItem="TeacherModel" />
+    </DataGridColumns>
+</DataGrid>
+
+@code {
+    private List<TeacherModel> teachers = new();
+    private List<TeacherModel> filteredTeachers = new();
+    private string selectedRoleFilter = "All";
+
+    private List<string> availableRoles = new() { "Lecturer", "Learner" };
+    private List<string> roleFilterOptions = new() { "All", "Lecturer", "Learner" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            teachers = await Http.GetFromJsonAsync<List<TeacherModel>>($"{AppSettings.BackendUrl}/api/Users/GetAllTeachers") ?? new();
+            NormalizeRoles(teachers);
+            ApplyRoleFilter();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching teachers: {ex.Message}");
+        }
+    }
+
+    private void OnRoleFilterChanged(string? role)
+    {
+        selectedRoleFilter = role ?? "All";
+        ApplyRoleFilter();
+    }
+
+    private void ApplyRoleFilter()
+    {
+        filteredTeachers = selectedRoleFilter == "All"
+            ? new List<TeacherModel>(teachers)
+            : teachers.Where(t => t.Roles.Contains(selectedRoleFilter)).ToList();
+    }
+
+    private async Task OnRowInserted(SavedRowItem<TeacherModel, Dictionary<string, object>> e)
+    {
+        e.Item.Roles = new List<string> { e.Item.SelectedRole };
+        var response = await Http.PostAsJsonAsync($"{AppSettings.BackendUrl}/api/Users/CreateTeacher", e.Item);
+
+        if (response.IsSuccessStatusCode)
+        {
+            teachers.Add(e.Item);
+            ApplyRoleFilter();
+        }
+    }
+
+    private async Task OnRowUpdated(SavedRowItem<TeacherModel, Dictionary<string, object>> e)
+    {
+        e.Item.Roles = new List<string> { e.Item.SelectedRole };
+        var response = await Http.PutAsJsonAsync($"{AppSettings.BackendUrl}/api/Users/UpdateTeacher/{e.Item.Id}", e.Item);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var index = teachers.FindIndex(x => x.Id == e.Item.Id);
+            if (index != -1) teachers[index] = e.Item;
+            ApplyRoleFilter();
+        }
+    }
+
+    private async Task OnRowRemoved(TeacherModel teacher)
+    {
+        var response = await Http.DeleteAsync($"{AppSettings.BackendUrl}/api/Users/DeleteTeacher/{teacher.Id}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            teachers.Remove(teacher);
+            ApplyRoleFilter();
+        }
+    }
+
+    private void NormalizeRoles(List<TeacherModel> items)
+    {
+        foreach (var t in items)
+        {
+            if (t.Roles == null || t.Roles.Count == 0)
+                t.Roles = new List<string> { "Lecturer" };
+
+            // Ensure SelectedRole always reflects Roles
+            t.SelectedRole = t.Roles.FirstOrDefault() ?? "Lecturer";
+        }
+    }
+}

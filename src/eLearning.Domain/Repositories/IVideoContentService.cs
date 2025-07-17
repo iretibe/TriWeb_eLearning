@@ -6,5 +6,6 @@ namespace eLearning.Domain.Repositories
     {
         Task AddVideoAsync(VideoContentDto dto);
         Task<List<VideoContentDto>> GetVideosByCourseAsync(Guid courseId);
+        Task<List<VideoContentDto>> GetAllVideoCoursesAsync();
     }
 }

@@ -56,5 +56,9 @@ namespace eLearning.Api.Controllers
         [HttpGet("GetCourseVideos/{courseId}")]
         public async Task<IActionResult> GetCourseVideos(Guid courseId)
             => Ok(await _mediator.Send(new GetVideosByCourseQuery(courseId)));
+
+        [HttpGet("GetAllCourseVideos")]
+        public async Task<IActionResult> GetAllCourseVideos() 
+            => Ok(await _mediator.Send(new GetAllCourseVideosQuery()));
     }
 }

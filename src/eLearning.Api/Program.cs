@@ -1,4 +1,5 @@
 using eLearning.Api;
+using eLearning.Api.Hubs;
 using eLearning.Application;
 using eLearning.Domain.Entities;
 using eLearning.Infrastructure;
@@ -34,18 +35,20 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+List<string> urlList = builder.Configuration.GetSection("WebClients:Links").Get<List<string>>()!;
+string[] clientUrls = urlList.Select(i => i.ToString()).ToArray();
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll",
-        builder =>
-        {
-            builder
-                .WithOrigins("https://localhost:7233")
-                .AllowAnyOrigin()
-                .AllowAnyMethod()
-                .AllowAnyHeader();
-        });
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.WithOrigins(clientUrls)
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
 });
+
+builder.Services.AddSignalR();
 
 builder.Services.AddOpenApi();
 
@@ -72,8 +75,17 @@ if (app.Environment.IsDevelopment())
 
     app.MapOpenApi();
 }
+else
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint(builder.Configuration["AppSettings:Folder"] + "/swagger/v1/swagger.json", "eLearning API");
+    });
+}
 
 app.UseCors("AllowAll");
+app.MapHub<CourseHub>("/hubs/course").RequireCors("AllowAll");
 
 app.UseStaticFiles();
 

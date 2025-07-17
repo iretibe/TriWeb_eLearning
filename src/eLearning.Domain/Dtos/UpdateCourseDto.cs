@@ -1,4 +1,6 @@
-﻿namespace eLearning.Domain.Dtos
+﻿using Microsoft.AspNetCore.Http;
+
+namespace eLearning.Domain.Dtos
 {
     public class UpdateCourseDto
     {
@@ -12,5 +14,6 @@
         public string CourseLanguage { get; set; } = default!;
         public string CourseLevel { get; set; } = default!;
         public string LecturerId { get; set; } = default!;
+        public IFormFile? ImageFile { get; set; }
     }
 }

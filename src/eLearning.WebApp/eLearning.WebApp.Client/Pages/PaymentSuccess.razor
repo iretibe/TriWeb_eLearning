@@ -1,0 +1,75 @@
+﻿@page "/payment-success"
+
+@using Blazored.SessionStorage
+@using eLearning.WebApp.Client.Models
+@using eLearning.WebApp.Client.Services
+@using Microsoft.AspNetCore.WebUtilities
+
+@inject NavigationManager Nav
+@inject ISessionStorageService _sessionStorage
+@inject CartService _cartService
+@inject IPaymentService _paymentService
+
+<h3>Payment Successful!</h3>
+<p>Your transaction is being verified...</p>
+
+<h3>Verifying payment...</h3>
+
+@if (isLoading)
+{
+    <p><span class="spinner-border"></span> Please wait...</p>
+}
+else if (isVerified)
+{
+    <p class="text-success">Payment verified! Thank you.</p>
+    <button class="btn btn-primary" @onclick="GoToMyCourses">Go to My Courses</button>
+}
+else if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p class="text-danger">@errorMessage</p>
+}
+
+@code {
+    private bool isLoading = true;
+    private bool isVerified = false;
+    private string errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = Nav.ToAbsoluteUri(Nav.Uri);
+        var queryParams = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+
+        if (queryParams.TryGetValue("reference", out var reference))
+        {
+            try
+            {
+                var verified = await _paymentService.VerifyPaymentAsync(reference);
+
+                if (verified)
+                {
+                    isVerified = true;
+
+                    // Clear the cart
+                    await _sessionStorage.RemoveItemAsync("cart");
+                    _cartService.SetCart(new List<CourseModel>());
+                }
+                else
+                {
+                    errorMessage = "Payment verification failed. Please contact support.";
+                }
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Error: {ex.Message}";
+            }
+        }
+        else
+        {
+            errorMessage = "No payment reference found.";
+        }
+
+        isLoading = false;
+    }
+
+    private void GoToMyCourses() => Nav.NavigateTo("/my-courses");
+}

@@ -8,7 +8,7 @@
         public decimal Price { get; set; }
         public bool IsRetired { get; set; } = false;
         public DateTime? RetireDate { get; set; }
-        public string ImageUrl { get; set; } = default!;
+        public string? ImageUrl { get; set; }
         public double? Rating { get; set; }
         public int? ReviewsCount { get; set; }
         public string Duration { get; set; } = default!;

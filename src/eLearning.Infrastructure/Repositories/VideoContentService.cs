@@ -29,6 +29,16 @@ namespace eLearning.Infrastructure.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task<List<VideoContentDto>> GetAllVideoCoursesAsync()
+            => await _context.VideoContents
+                .Select(v => new VideoContentDto
+                {
+                    Title = v.Title,
+                    VideoUrl = v.VideoUrl,
+                    CourseId = v.CourseId,
+                    CourseTitle = v.Course.Title
+                }).ToListAsync();
+
         public async Task<List<VideoContentDto>> GetVideosByCourseAsync(Guid courseId)
         {
             return await _context.VideoContents
@@ -37,7 +47,8 @@ namespace eLearning.Infrastructure.Repositories
                 {
                     Title = v.Title,
                     VideoUrl = v.VideoUrl,
-                    CourseId = v.CourseId
+                    CourseId = v.CourseId,
+                    CourseTitle = v.Course.Title
                 }).ToListAsync();
         }
     }

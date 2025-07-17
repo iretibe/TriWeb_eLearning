@@ -1,8 +1,10 @@
-﻿using eLearning.Application.Commands;
+﻿using eLearning.Api.Hubs;
+using eLearning.Application.Commands;
 using eLearning.Application.Queries;
 using eLearning.Domain.Dtos;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace eLearning.Api.Controllers
 {
@@ -12,11 +14,14 @@ namespace eLearning.Api.Controllers
     {
         private readonly IMediator _mediator;
         private readonly IWebHostEnvironment _env;
+        private readonly IHubContext<CourseHub> _hubContext;
 
-        public CoursesController(IMediator mediator, IWebHostEnvironment env)
+        public CoursesController(IMediator mediator, 
+            IWebHostEnvironment env, IHubContext<CourseHub> hubContext)
         {
             _mediator = mediator;
             _env = env;
+            _hubContext = hubContext;
         }
 
         [HttpGet("GetAllCourses")]
@@ -95,10 +100,28 @@ namespace eLearning.Api.Controllers
                 LecturerId = request.LecturerId,
                 Duration = request.Duration,
                 ImageUrl = $"/uploads/{fileName}",
-                ImageFile = request.ImageFile
+                ImageFile = request.ImageFile,
+                CourseLanguage = request.CourseLanguage,
+                CourseLevel = request.CourseLevel
             };
 
             var courseId = await _mediator.Send(command);
+
+            var newCourseDto = new CourseDto
+            {
+                Id = courseId,
+                Title = command.Title,
+                Description = command.Description,
+                Price = command.Price,
+                LecturerId = command.LecturerId,
+                Duration = command.Duration,
+                ImageUrl = command.ImageUrl,
+                CourseLanguage = command.CourseLanguage,
+                CourseLevel = command.CourseLevel
+            };
+
+            // Notify all clients
+            await _hubContext.Clients.All.SendAsync("CourseCreated", newCourseDto);
 
             return Ok(courseId);
         }

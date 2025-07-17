@@ -4,6 +4,7 @@
 @inject NavigationManager Nav
 @inject IPaymentService _paymentService
 @inject IOrderService _orderService
+@inject IUserService _userService
 @inject AuthenticationStateProvider AuthProvider
 
 <p>Verifying your payment, please wait...</p>
@@ -33,7 +34,10 @@
                     if (orderId != Guid.Parse("00000000-0000-0000-0000-000000000000"))
                     {
                         await _orderService.MarkOrderAsPaidAsync(orderId, reference);
-                        Nav.NavigateTo("/my-courses", forceLoad: true);
+                        
+                        var userId = await _userService.GetUserIdByEmailAsync(user.Identity?.Name!);
+                        Nav.NavigateTo($"/my-courses?userId={userId}", forceLoad: true);
+                        // Nav.NavigateTo("/my-courses", forceLoad: true);
                         return;
                     }
                 }

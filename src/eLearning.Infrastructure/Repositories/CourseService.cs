@@ -3,16 +3,19 @@ using eLearning.Domain.Entities;
 using eLearning.Domain.Repositories;
 using eLearning.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace eLearning.Infrastructure.Repositories
 {
     public class CourseService : ICourseService
     {
         private readonly eLearningContext _context;
+        private readonly IConfiguration _configuration;
 
-        public CourseService(eLearningContext context)
+        public CourseService(eLearningContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
 
         public async Task<double> CalculateCourseRatingAsync(Guid courseId)
@@ -135,33 +138,34 @@ namespace eLearning.Infrastructure.Repositories
 
         public async Task<List<CourseDto>> GetUserCoursesAsync(string userId)
         {
-            var query = await _context.Enrollments
-                .Where(e => e.LearnerId == userId)
-                .Include(e => e.Course)
-                    .ThenInclude(c => c.Videos)
-                .Select(e => new CourseDto
+            var query = await _context.Orders
+                .Where(o => o.UserId == userId)
+                .OrderByDescending(o => o.OrderDate)
+                .SelectMany(o => o.Items, (order, item) => new { order, item })
+                .Select(x => new CourseDto
                 {
-                    Id = e.Course.Id,
-                    Title = e.Course.Title,
-                    Description = e.Course.Description,
-                    Price = e.Course.Price,
-                    ImageUrl = e.Course.ImageUrl,
-                    LecturerId = e.Course.LecturerId,
-                    LecturerName = e.Course.Lecturer.UserName!,
-                    Rating = e.Course.Rating,
-                    ReviewsCount = e.Course.ReviewsCount,
-                    Duration = e.Course.Duration,
-                    StudentsEnrolled = e.Course.StudentsEnrolled,
-                    PublishedDate = e.Course.PublishedDate,
-                    CourseLanguage = e.Course.CourseLanguage,
-                    CourseLevel = e.Course.CourseLevel,
-                    //VideoUrls = e.Course.Videos.Select(v => v.VideoUrl).ToList()
-                    VideoUrls = e.Course.Videos.Select(v => "https://localhost:7012" + v.VideoUrl).ToList()
-
+                    Id = x.item.CourseId,
+                    Title = x.item.CourseTitle,
+                    Description = x.item.Course.Description,
+                    Price = x.item.Course.Price,
+                    ImageUrl = x.item.Course.ImageUrl,
+                    LecturerId = x.item.Course.LecturerId,
+                    LecturerName = x.item.Course.Lecturer.UserName!,
+                    Rating = x.item.Course.Rating,
+                    ReviewsCount = x.item.Course.ReviewsCount,
+                    Duration = x.item.Course.Duration,
+                    StudentsEnrolled = x.item.Course.StudentsEnrolled,
+                    PublishedDate = x.item.Course.PublishedDate,
+                    CourseLanguage = x.item.Course.CourseLanguage,
+                    CourseLevel = x.item.Course.CourseLevel,
+                    VideoUrls = x.item.Course.Videos
+                        .OrderBy(v => v.Title) // or any preferred field
+                        .Take(1)
+                        .Select(v => $"{_configuration["ApiUrls:BackendUrl"]}{v.VideoUrl}")
+                        .ToList()
                 })
                 .ToListAsync();
 
-            return query;
             //var query = await _context.Enrollments
             //    .Where(e => e.LearnerId == userId)
             //    .Include(e => e.Course)
@@ -173,11 +177,21 @@ namespace eLearning.Infrastructure.Repositories
             //        Description = e.Course.Description,
             //        Price = e.Course.Price,
             //        ImageUrl = e.Course.ImageUrl,
-            //        VideoUrls = e.Course.Videos.Select(v => v.VideoUrl).ToList()
+            //        LecturerId = e.Course.LecturerId,
+            //        LecturerName = e.Course.Lecturer.UserName!,
+            //        Rating = e.Course.Rating,
+            //        ReviewsCount = e.Course.ReviewsCount,
+            //        Duration = e.Course.Duration,
+            //        StudentsEnrolled = e.Course.StudentsEnrolled,
+            //        PublishedDate = e.Course.PublishedDate,
+            //        CourseLanguage = e.Course.CourseLanguage,
+            //        CourseLevel = e.Course.CourseLevel,
+            //        //VideoUrls = e.Course.Videos.Select(v => v.VideoUrl).ToList()
+            //        VideoUrls = e.Course.Videos.Select(v => $"{_configuration.GetSection("ApiUrls").GetSection("BackendUrl").Value}{v.VideoUrl}").ToList()
             //    })
             //    .ToListAsync();
 
-            //return query;
+            return query;
         }
 
         public async Task RecalculateCourseStatisticsAsync(Guid courseId)

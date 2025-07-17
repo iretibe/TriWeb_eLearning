@@ -11,6 +11,6 @@ namespace eLearning.Application.Commands
         public Guid CourseId { get; set; }
 
         // This will be set in the controller
-        public string VideoUrl { get; set; } = default!;
+        public string? VideoUrl { get; set; }
     }
 }

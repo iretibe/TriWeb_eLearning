@@ -1,0 +1,212 @@
+﻿@page "/upload-video"
+@attribute [Authorize]
+
+@using System.Net.Http.Headers
+@using System.Net.Http.Json
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using eLearning.UI.Client.Models
+@using eLearning.UI.Client.Services
+
+@inject HttpClient Http
+@inject AppSettingsService AppSettings
+
+<PageTitle>Upload Course Video</PageTitle>
+
+<h3 class="mb-4">Upload or Replace Course Video</h3>
+
+<div class="mb-4">
+    <form onsubmit="return false">
+        <div class="mb-2">
+            <label class="form-label">Course</label>
+            <select class="form-select" @bind="selectedCourseId">
+                <option value="">-- Select Course --</option>
+                @foreach (var course in courses)
+                {
+                    <option value="@course.Id">@course.Title</option>
+                }
+            </select>
+        </div>
+
+        <div class="mb-2">
+            <label class="form-label">Video Title</label>
+            <input type="text" class="form-control" @bind="videoTitle" />
+        </div>
+
+        <div class="mb-2">
+            <label class="form-label">Upload Video File</label>
+            <InputFile OnChange="HandleFileChange" />
+            @if (!string.IsNullOrEmpty(selectedVideoFile?.Name))
+            {
+                <p class="text-muted mt-1">@selectedVideoFile?.Name</p>
+            }
+        </div>
+
+        <button class="btn btn-primary" @onclick="UploadVideoAsync" disabled="@isUploading">
+            @(isUploading ? "Uploading..." : "Upload Video")
+        </button>
+
+        @if (uploadSuccess)
+        {
+            <div class="alert alert-success mt-2">Video uploaded successfully!</div>
+        }
+
+        @if (uploadError)
+        {
+            <div class="alert alert-danger mt-2">Failed to upload video. Please try again.</div>
+        }
+    </form>
+</div>
+
+<h4>All Course Videos</h4>
+
+@if (PagedVideos?.Any() == true)
+{
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Video Title</th>
+                <th>Course Title</th>
+                <th>Preview</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var video in PagedVideos)
+            {
+                <tr>
+                    <td>@video.Title</td>
+                    <td>@video.CourseTitle</td>
+                    <td>
+                        @if (!string.IsNullOrWhiteSpace(video.VideoUrl))
+                        {
+                            <video width="200" height="120" controls>
+                                <source src="@($"{baseUrl}{video.VideoUrl}")" type="video/mp4" />
+                                Your browser does not support the video tag.
+                            </video>
+                        }
+                        else
+                        {
+                            <span class="text-muted">No Video</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <nav aria-label="Video pagination">
+        <ul class="pagination">
+            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                <button class="page-link" @onclick="() => ChangePage(currentPage - 1)">Previous</button>
+            </li>
+
+            @for (int i = 1; i <= TotalPages; i++)
+            {
+                <li class="page-item @(i == currentPage ? "active" : "")">
+                    <button class="page-link" @onclick="() => ChangePage(i)">@i</button>
+                </li>
+            }
+
+            <li class="page-item @(currentPage == TotalPages ? "disabled" : "")">
+                <button class="page-link" @onclick="() => ChangePage(currentPage + 1)">Next</button>
+            </li>
+        </ul>
+    </nav>
+}
+else
+{
+    <p class="text-muted">No videos available.</p>
+}
+
+@code {
+    private List<CourseModel> courses = new();
+    private List<VideoContentModel> videos = new();
+    private IBrowserFile? selectedVideoFile;
+    private string videoTitle = string.Empty;
+    private Guid selectedCourseId = Guid.Empty;
+    private string baseUrl = string.Empty;
+
+    private bool isUploading = false;
+    private bool uploadSuccess = false;
+    private bool uploadError = false;
+
+    // Pagination
+    private int currentPage = 1;
+    private int pageSize = 3;
+    private int TotalPages => (int)Math.Ceiling((double)(videos?.Count ?? 0) / pageSize);
+    private IEnumerable<VideoContentModel> PagedVideos => videos
+        .Skip((currentPage - 1) * pageSize)
+        .Take(pageSize);
+
+    protected override async Task OnInitializedAsync()
+    {
+        baseUrl = AppSettings.BackendUrl?.TrimEnd('/') ?? "";
+
+        courses = await Http.GetFromJsonAsync<List<CourseModel>>($"{baseUrl}/api/Courses/GetAllCourses") ?? new();
+        videos = await Http.GetFromJsonAsync<List<VideoContentModel>>($"{baseUrl}/api/Videos/GetAllCourseVideos") ?? new();
+    }
+
+    private void HandleFileChange(InputFileChangeEventArgs e)
+    {
+        selectedVideoFile = e.File;
+    }
+
+    private async Task UploadVideoAsync()
+    {
+        uploadSuccess = uploadError = false;
+
+        if (selectedVideoFile == null || string.IsNullOrWhiteSpace(videoTitle) || selectedCourseId == Guid.Empty)
+        {
+            uploadError = true;
+            return;
+        }
+
+        isUploading = true;
+
+        try
+        {
+            var form = new MultipartFormDataContent
+            {
+                { new StringContent(videoTitle), "Title" },
+                { new StringContent(selectedCourseId.ToString()), "CourseId" }
+            };
+
+            var stream = selectedVideoFile.OpenReadStream(3L * 1024 * 1024 * 1024); // 3 GB
+            var fileContent = new StreamContent(stream);
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue(selectedVideoFile.ContentType);
+            form.Add(fileContent, "VideoFile", selectedVideoFile.Name);
+
+            var response = await Http.PostAsync($"{baseUrl}/api/Videos/AddVideo", form);
+
+            if (response.IsSuccessStatusCode)
+            {
+                uploadSuccess = true;
+                videoTitle = string.Empty;
+                selectedCourseId = Guid.Empty;
+                selectedVideoFile = null;
+
+                videos = await Http.GetFromJsonAsync<List<VideoContentModel>>($"{baseUrl}/api/Videos/GetAllCourseVideos") ?? new();
+                currentPage = 1;
+            }
+            else
+            {
+                uploadError = true;
+                var errorDetails = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Upload error: {errorDetails}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Upload error: {ex.Message}");
+            uploadError = true;
+        }
+
+        isUploading = false;
+    }
+
+    private void ChangePage(int page)
+    {
+        if (page >= 1 && page <= TotalPages)
+            currentPage = page;
+    }
+}

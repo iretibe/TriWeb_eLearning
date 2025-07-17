@@ -1,0 +1,45 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+
+<div class="page">
+    @if (!IsAccountPage)
+    {
+        <div class="sidebar">
+            <NavMenu />
+        </div>
+    }
+    
+    <main>
+        @* <div class="top-row px-4">
+            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+        </div> *@
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code {
+    private string? currentUrl;
+
+    protected override void OnInitialized()
+    {
+        currentUrl = Navigation.ToBaseRelativePath(Navigation.Uri);
+        Navigation.LocationChanged += (_, e) =>
+        {
+            currentUrl = Navigation.ToBaseRelativePath(e.Location);
+            StateHasChanged();
+        };
+    }
+
+    private bool IsAccountPage =>
+        !string.IsNullOrEmpty(currentUrl) &&
+        currentUrl.StartsWith("Account/", StringComparison.OrdinalIgnoreCase);
+}

@@ -1,4 +1,7 @@
 ﻿@using eLearning.WebApp.Client.Services
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject AuthenticationStateProvider AuthProvider
 @inject CartService _cartService
 
 <!-- Header Start -->
@@ -34,7 +37,7 @@
             <div class="d-flex avatar border-bottom pb-3">
               <img class="img-fluid border rounded-circle" src="images/ava-sm1.jpg" width="50" alt="avatar" />
               <div class="grettings ps-3">
-                <h6 class="mb-0">Abdul Djalal</h6>
+                <h6 class="mb-0">@userName</h6>
               </div>
             </div>
 
@@ -91,10 +94,9 @@
             </nav>
           </div>
 
-          <!-- Enroll Button -->
-          @* <NavLink href="/signup" class="btn d-none d-sm-block btn-primary shadow border-0 rounded-2">
-            Enroll Now
-          </NavLink> *@
+            <!-- Enroll Button -->
+            @* <NavLink href="/account/login?role=teacher&returnUrl=/admin" class="btn btn-info">Teacher Login</NavLink> *@
+            <NavLink href="/account/login?role=learner&returnUrl=/my-courses" class="btn btn-primary">User Login</NavLink>
         </div>
 
         <!-- Hamburger Menu (for mobile) -->
@@ -113,15 +115,15 @@
 
           <div class="offcanvas-body pt-0 align-items-center">
             <ul class="navbar-nav mx-auto align-items-lg-center">
-              <li class="nav-item">
+              @* <li class="nav-item">
                 <NavLink class="nav-link" href="/">Home</NavLink>
-              </li>
-              <li class="nav-item">
+              </li> *@
+              @* <li class="nav-item">
                 <NavLink class="nav-link" href="/courses">Courses</NavLink>
               </li>
               <li class="nav-item">
                 <NavLink class="nav-link" href="/pricing">Pricing Plan</NavLink>
-              </li>
+              </li> *@
             </ul>
           </div>
         </div>
@@ -133,8 +135,18 @@
 <!-- Header End -->
 
 @code {
-    protected override void OnInitialized()
+    private string userName = "Guest";
+
+    protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            userName = user.Identity.Name ?? user.Claims.FirstOrDefault(c => c.Type == "email")?.Value ?? "User";
+        }
+
         _cartService.OnChange += StateHasChanged;
     }
 

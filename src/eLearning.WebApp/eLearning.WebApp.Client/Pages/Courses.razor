@@ -1,6 +1,10 @@
 ﻿@page "/courses"
+@using eLearning.WebApp.Client.Helpers
 @using eLearning.WebApp.Client.Models
 @using eLearning.WebApp.Client.Services
+@using Microsoft.AspNetCore.SignalR.Client
+
+@inject AppSettingsService AppSettings
 
 @inject ICourseService _service
 
@@ -42,7 +46,9 @@
                                                 <div class="card-media position-relative">
                                                     <a href="@($"/courseDetail/{course.Id}")">
                                                         @* <img class="card-img-top" src="@course.ImageUrl" alt="Course" /> *@
-                                                        <img class="card-img-top" src="@($"https://localhost:7012{course.ImageUrl}")" alt="Course" />
+                                                        @* <img class="card-img-top" src="@($"https://abdelytics.pro/elearning.api{course.ImageUrl}")" alt="Course" /> *@
+                                                        @* <img src="@UrlHelpers.BuildImageUrl(AppSettings.BackendUrl, course.ImageUrl)" /> *@
+                                                        <img class="card-img-top" src="@($"{AppSettings.BackendUrl}{course.ImageUrl}")" alt="Course" />
                                                     </a>
                                                     <a href="#" class="action-wishlist position-absolute text-white icon-xs rounded-circle">
                                                         <img src="images/icons/heart-fill.svg" alt="Wishlist">
@@ -95,9 +101,36 @@
 
 @code {
     private List<CourseModel> courses = new();
+    private HubConnection? hubConnection;
 
     protected override async Task OnInitializedAsync()
     {
+        //Load existing courses from the service
         courses = await _service.GetAllCoursesAsync();
+
+        //Initialize SignalR connection
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl($"{AppSettings.BackendUrl}/hubs/course") // Use API base URL
+            .WithAutomaticReconnect()
+            .Build();
+
+        //Listen for new courses
+        hubConnection.On<CourseModel>("CourseCreated", (newCourse) =>
+        {
+            courses.Add(newCourse);
+            InvokeAsync(StateHasChanged); // Update UI
+        });
+
+        await hubConnection.StartAsync();
+    }
+
+    public bool IsConnected => hubConnection?.State == HubConnectionState.Connected;
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
     }
 }

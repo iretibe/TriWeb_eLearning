@@ -2,7 +2,7 @@
 
 @using Microsoft.AspNetCore.Components.Authorization
 @using System.Security.Claims
-@using PayStack.Net
+@* @using PayStack.Net
 @using eLearning.WebApp.Client.Models
 @using eLearning.WebApp.Client.Services
 @using Blazored.SessionStorage
@@ -14,10 +14,10 @@
 @inject AuthenticationStateProvider AuthProvider
 @inject ISessionStorageService _sessionStorage
 @inject IConfiguration _configuration
-@inject IJSRuntime JS
+@inject IJSRuntime JS *@
 
 <!-- Promo Section Start -->
-   <section class="promo-sec" style="background: url('images/promo-bg.jpg')no-repeat center center / cover;">
+   @* <section class="promo-sec" style="background: url('images/promo-bg.jpg')no-repeat center center / cover;">
       <img src="images/promo-left.png" alt="" class="anim-img">
       <img src="images/promo-right.png" alt="" class="anim-img anim-right">
       <div class="container">
@@ -33,13 +33,12 @@
             </div>
          </div>
       </div>
-   </section>
+   </section> *@
    <!-- Promo Section End -->
 
    <!-- Checkout Section Start -->
-   <section class="checkout-section sec-padding">
+   @* <section class="checkout-section sec-padding">
         <div class="container">
-            @* <form class="form checkout-form" @onsubmit="PlaceOrder"> *@
                 <div class="row">
                     <div class="col-lg-8 col-sm-12">
                         <h3 class="sub-title">Billing Details:</h3>
@@ -161,12 +160,11 @@
                         </aside>
                     </div>
                 </div>
-            @* </form> *@
         </div>
-    </section>
+    </section> *@
    <!-- Checkout Section End -->
 
-@code {
+@* @code {
     [Parameter] public Guid Id { get; set; }
 
     private CourseModel? course;
@@ -269,4 +267,4 @@
 
     private string GenerateReference() =>
         $"ELRN-{Guid.NewGuid().ToString("N").Substring(0, 12).ToUpper()}";
-}
+} *@

@@ -1,4 +1,5 @@
 using Blazored.SessionStorage;
+using eLearning.WebApp.Client.Helpers;
 using eLearning.WebApp.Client.Services;
 using eLearning.WebApp.Components;
 using eLearning.WebApp.Components.Account;
@@ -47,8 +48,19 @@ builder.Services.AddHttpClient();
 
 builder.Services.AddHttpClient("BackendUrl", client =>
 {
-    client.BaseAddress = new Uri(builder.Configuration["ApiUrls:BackendUrl"] ?? "https://localhost:7012");
+    client.BaseAddress = new Uri(builder.Configuration["ApiUrls:BackendUrl"]!);
 });
+
+// Read backend URL from config
+var backendUrl = builder.Configuration["ApiUrls:BackendUrl"];
+
+// Register HTTP clients using helper method
+builder.Services.AddBackendHttpClient<CourseClientService>(builder.Configuration);
+builder.Services.AddBackendHttpClient<OrderClientService>(builder.Configuration);
+builder.Services.AddBackendHttpClient<PaymentClientService>(builder.Configuration);
+builder.Services.AddBackendHttpClient<UserClientService>(builder.Configuration);
+
+builder.Services.AddSingleton<AppSettingsService>();
 
 builder.Services
     .AddScoped<ICourseService, CourseClientService>()
@@ -58,10 +70,17 @@ builder.Services
 
 builder.Services.AddScoped<CartService>();
 
+List<string> urlList = builder.Configuration.GetSection("WebClients:Links").Get<List<string>>()!;
+string[] clientUrls = urlList.Select(i => i.ToString()).ToArray();
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAllOrigins",
-        builder => builder.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.WithOrigins(clientUrls)
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
 });
 
 builder.Services.AddBlazoredSessionStorage();
@@ -85,7 +104,7 @@ app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 
-app.UseCors("AllowAllOrigins");
+app.UseCors("AllowAll");
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()

@@ -28,7 +28,7 @@ namespace eLearning.Infrastructure
             services.AddScoped<IVideoContentService, VideoContentService>();
             services.AddScoped<ICourseReviewService, CourseReviewService>();
             services.AddScoped<IOrderService, OrderService>();
-            services.AddScoped<ISubscriptionService, SubscriptionService>();
+            services.AddScoped<IPaymentGatewayService, PaymentGatewayService>();
 
             services.Configure<EmailSettings>(configuration.GetSection("EmailSettings"));
             services.AddScoped<IEmailService, EmailService>();

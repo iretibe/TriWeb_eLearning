@@ -1,9 +1,11 @@
 ﻿@page "/my-courses"
+@using eLearning.WebApp.Client.Helpers
 @using eLearning.WebApp.Client.Models
 @using eLearning.WebApp.Client.Services
 @inject IUserService _userService
 @inject ICourseService _courseService
 @inject AuthenticationStateProvider _authProvider
+@inject AppSettingsService AppSettings
 
 <section class="promo-sec" style="background: url('images/promo-bg.jpg') no-repeat center center / cover;">
     <img src="images/promo-left.png" alt="" class="anim-img">
@@ -44,7 +46,7 @@ else
                         <div class="col">
                             <div class="card h-100 shadow-sm border-0" @onclick="() => OpenVideo(url)">
                                 <video class="card-img-top" muted playsinline>
-                                    <source src="https://localhost:7012@url" type="video/mp4" />
+                                    <source src="@url" type="video/mp4" />
                                     Your browser does not support HTML5 video.
                                 </video>
                                 <div class="card-body">
@@ -120,7 +122,7 @@ else
             {
                 course.VideoUrls = course.VideoUrls
                     .Where(v => !string.IsNullOrWhiteSpace(v))
-                    .Select(v => v.StartsWith("http") ? v : $"https://localhost:7012{v}")
+                    .Select(v => v.StartsWith("http") ? v : $"{AppSettings.BackendUrl.TrimEnd('/')}/{v.TrimStart('/')}")
                     .ToList();
             }
         }

@@ -25,29 +25,83 @@ namespace eLearning.Infrastructure.Repositories
             }
         }
 
-        public async Task<IEnumerable<ApplicationUserDto>> GetAllUsersAsync()
+        public async Task<IEnumerable<ApplicationUserDto>> GetAllLecturersAsync()
         {
             var users = await _userManager.Users.ToListAsync();
 
-            var result = await Task.WhenAll(users.Select(async user => new ApplicationUserDto
+            var result = new List<ApplicationUserDto>();
+
+            foreach (var user in users)
             {
-                Id = user.Id,
-                UserName = user.UserName!,
-                Email = user.Email!,
-                Roles = await _userManager.GetRolesAsync(user)
-            }));
+                var roles = await _userManager.GetRolesAsync(user);
+
+                if (roles.Contains("Lecturer"))
+                {
+                    result.Add(new ApplicationUserDto
+                    {
+                        Id = user.Id,
+                        UserName = user.UserName!,
+                        Email = user.Email!,
+                        Roles = roles
+                    });
+                }
+            }
 
             return result;
         }
 
-        public async Task<ApplicationUserDto?> GetUserByIdAsync(string userId)
+        //public async Task<IEnumerable<ApplicationUserDto>> GetAllUsersAsync()
+        //{
+        //    var users = await _userManager.Users.ToListAsync();
+
+        //    var result = await Task.WhenAll(users.Select(async user => new ApplicationUserDto
+        //    {
+        //        Id = user.Id,
+        //        UserName = user.UserName!,
+        //        Email = user.Email!,
+        //        Roles = await _userManager.GetRolesAsync(user)
+        //    }));
+
+        //    return result;
+        //}
+
+        public async Task<IEnumerable<ApplicationUserDto>> GetAllUsersAsync()
+        {
+            var users = await _userManager.Users.ToListAsync();
+
+            var result = new List<ApplicationUserDto>();
+
+            foreach (var user in users)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+
+                if (roles.Contains("Learner"))
+                {
+                    result.Add(new ApplicationUserDto
+                    {
+                        Id = user.Id,
+                        UserName = user.UserName!,
+                        Email = user.Email!,
+                        Roles = roles
+                    });
+                }
+            }
+
+            return result;
+        }
+
+        public async Task<ApplicationUserDto?> GetLecturerByIdAsync(string userId)
         {
             var user = await _userManager.FindByIdAsync(userId);
-            
-            if (user is null) return null;
-            
+
+            if (user == null)
+                return null;
+
             var roles = await _userManager.GetRolesAsync(user);
-            
+
+            if (!roles.Contains("Lecturer"))
+                return null;
+
             return new ApplicationUserDto
             {
                 Id = user.Id,
@@ -56,6 +110,70 @@ namespace eLearning.Infrastructure.Repositories
                 Roles = roles
             };
         }
+
+        //public async Task<ApplicationUserDto?> GetUserByIdAsync(string userId)
+        //{
+        //    var user = await _userManager.FindByIdAsync(userId);
+
+        //    if (user is null) return null;
+
+        //    var roles = await _userManager.GetRolesAsync(user);
+
+        //    return new ApplicationUserDto
+        //    {
+        //        Id = user.Id,
+        //        UserName = user.UserName!,
+        //        Email = user.Email!,
+        //        Roles = roles
+        //    };
+        //}
+
+        public async Task<ApplicationUserDto?> GetUserByIdAsync(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+
+            if (user == null)
+                return null;
+
+            var roles = await _userManager.GetRolesAsync(user);
+
+            if (!roles.Contains("Learner"))
+                return null;
+
+            return new ApplicationUserDto
+            {
+                Id = user.Id,
+                UserName = user.UserName!,
+                Email = user.Email!,
+                Roles = roles
+            };
+        }
+
+        //public async Task<IEnumerable<ApplicationUserDto>> GetAllLearnerUsersAsync()
+        //{
+        //    var learnerRole = await _context.Roles
+        //        .FirstOrDefaultAsync(r => r.NormalizedName == "LEARNER");
+
+        //    if (learnerRole == null)
+        //        return Enumerable.Empty<ApplicationUserDto>();
+
+        //    var learnerUsers = from user in _context.Users
+        //                       join userRole in _context.UserRoles on user.Id equals userRole.UserId
+        //                       where userRole.RoleId == learnerRole.Id
+        //                       select user;
+
+        //    var users = await learnerUsers.ToListAsync();
+
+        //    var result = await Task.WhenAll(users.Select(async user => new ApplicationUserDto
+        //    {
+        //        Id = user.Id,
+        //        UserName = user.UserName!,
+        //        Email = user.Email!,
+        //        Roles = await _userManager.GetRolesAsync(user)
+        //    }));
+
+        //    return result;
+        //}
 
         public async Task<string> GetUserIdByEmailAsync(string email)
         {

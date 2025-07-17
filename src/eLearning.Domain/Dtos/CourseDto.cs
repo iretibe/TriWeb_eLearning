@@ -10,7 +10,7 @@
         public DateTime? RetireDate { get; set; }
         public string LecturerId { get; set; } = default!;
         public string LecturerName { get; set; } = default!;
-        public string ImageUrl { get; set; } = default!;
+        public string? ImageUrl { get; set; }
         public double? Rating { get; set; }
         public int? ReviewsCount { get; set; }
         public string Duration { get; set; } = default!;

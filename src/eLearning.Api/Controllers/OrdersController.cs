@@ -1,9 +1,7 @@
 ﻿using eLearning.Application.Commands;
 using eLearning.Application.Queries;
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace eLearning.Api.Controllers
 {

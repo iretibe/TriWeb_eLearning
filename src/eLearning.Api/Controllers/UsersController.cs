@@ -19,6 +19,12 @@ namespace eLearning.Api.Controllers
         [HttpGet("GetUserById/{userId}")]
         public async Task<IActionResult> GetUserById(string userId) => Ok(await _mediator.Send(new GetUserByIdQuery(userId)));
 
+        [HttpGet("GetAllTeachers")]
+        public async Task<IActionResult> GetAllTeachers() => Ok(await _mediator.Send(new GetAllTeachersQuery()));
+
+        [HttpGet("GetTeacherById/{userId}")]
+        public async Task<IActionResult> GetTeacherById(string userId) => Ok(await _mediator.Send(new GetTeacherByIdQuery(userId)));
+
         [HttpGet("GetUserRoles/{userId}")]
         public async Task<IActionResult> GetUserRoles(string userId) => Ok(await _mediator.Send(new GetUserRolesQuery(userId)));
 

@@ -1,7 +1,10 @@
 ﻿@page "/cart"
+
 @using Blazored.SessionStorage
 @using eLearning.WebApp.Client.Models
+@using eLearning.WebApp.Client.Responses
 @using eLearning.WebApp.Client.Services
+
 @inject CartService _cartService
 @inject NavigationManager Nav
 @inject AuthenticationStateProvider AuthProvider
@@ -198,6 +201,13 @@ else
         _cartService.SetCart(CartItems);
     }
 
+    private async Task ClearCartAsync()
+    {
+        CartItems.Clear();
+        await _sessionStorage.RemoveItemAsync("cart");
+        _cartService.SetCart(CartItems);
+    }   
+
     private async Task ProceedToCheckout()
     {
         if (!CartItems.Any()) return;
@@ -220,7 +230,7 @@ else
         try
         {
             isProcessing = true;
-            StateHasChanged(); // Update UI to show overlay
+            StateHasChanged(); // Show loading
 
             var authState = await AuthProvider.GetAuthenticationStateAsync();
             var user = authState.User;
@@ -236,49 +246,32 @@ else
             var reference = GenerateReference();
             var totalAmount = Convert.ToInt32(CartItems.Sum(c => c.Price));
 
-            // Step 1: Save order & items
+            // Save order & items
             await _orderService.CreateOneTimePurchaseOrderAsync(userId, CartItems, reference);
 
-            // Step 2: Initialize Paystack
-            var payUrl = await _paymentService.InitializePaystackAsync(email, totalAmount, reference);
+            // Initialize Paystack
+            var callbackUrl = $"{Nav.BaseUri}payment-success?reference={reference}";
+            var payUrl = await _paymentService.InitializePaymentAsync(email, totalAmount, reference, callbackUrl);
 
-            // Step 3: Redirect to Paystack
-            await JS.InvokeVoidAsync("redirectToPaystack", payUrl);
+            if (!string.IsNullOrEmpty(payUrl))
+            {
+                await JS.InvokeVoidAsync("redirectToPaystack", payUrl);
+            }
+            else
+            {
+                Console.WriteLine("Paystack URL missing.");
+            }
         }
         catch (Exception ex)
         {
-            Console.WriteLine("Paystack Trigger Failed: " + ex.Message);
-            // Optional: show an error message on the UI
+            Console.WriteLine($"Paystack Trigger Failed: {ex.Message}");
         }
         finally
         {
             isProcessing = false;
-            StateHasChanged(); // Ensure UI overlay hides if there's an error
+            StateHasChanged(); // Hide spinner
         }
     }
-
-    // private async Task TriggerCartPaystackAsync()
-    // {
-    //     var authState = await AuthProvider.GetAuthenticationStateAsync();
-    //     var user = authState.User;
-    //     var email = user.Identity?.Name ?? "";
-    //     var userId = await _userService.GetUserIdByEmailAsync(email);
-
-    //     if (!CartItems.Any())
-    //         return;
-
-    //     var reference = GenerateReference();
-    //     var totalAmount = Convert.ToInt32(CartItems.Sum(c => c.Price));
-
-    //     // Save order & order items using CartItems
-    //     await _orderService.CreateOneTimePurchaseOrderAsync(userId, CartItems, reference);
-
-    //     // Initialize Paystack payment
-    //     var payUrl = await _paymentService.InitializePaystackAsync(email, totalAmount, reference);
-
-    //     // Redirect to Paystack payment page
-    //     await JS.InvokeVoidAsync("redirectToPaystack", payUrl);
-    // }
 
     private string GenerateReference() =>
         $"ELRN-{Guid.NewGuid().ToString("N").Substring(0, 12).ToUpper()}";
